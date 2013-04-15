@@ -1,7 +1,0 @@
-bilbo:
-  first_name: "bilbo"
-  last_name: "baggins"
-  email: "bilbgo@baggins.com"
-  profile_name: "bilbobaggins"
-  password: "password"
-  password_confirmation: "password"

@@ -11,7 +11,7 @@ class StatusTest < ActiveSupport::TestCase
 	  	status = Status.new
 	  	status.content = "H"
 	  	assert !status.save
-	  	assert !status.errors[:content]
+	  	assert !status.errors[:content].empty?
 	  end
 
 	  test "that a status has a user id" do

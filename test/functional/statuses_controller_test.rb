@@ -49,6 +49,12 @@ end
     assert_response :success
   end
 
+  test "should redirect status updatewhen not logged in" do
+    put :update, id: @status, status: { content: @status.content}
+    assert_response :redirect
+    assert_redirected_to new_user_session_path
+  end
+  
   test "should update status when logged in" do
     sign_in users(:bilbobaggins)
     put :update, id: @status, status: { content: @status.content, name: @status.name }
