@@ -13,7 +13,10 @@ end
 gem 'devise'
 gem 'simple_form'
 #gem 'eventmachine'
-# 
+
+group :test do
+	gem 'shoulda'
+end
 # Gems used only for assets and not required
 # in production environments by default.
 group :assets do
