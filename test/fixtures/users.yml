@@ -9,3 +9,9 @@ gandalf:
   last_name: "the_gray"
   email: "gandalf@thegray.com"
   profile_name: "gandalf"
+
+samwise:
+  first_name: "sam"
+  last_name: "gamgee"
+  email: "samwise@gamgee.com"
+  profile_name: "sam"
