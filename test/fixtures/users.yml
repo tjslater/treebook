@@ -3,6 +3,7 @@ baggins:
   last_name: "baggins"
   email: "bilbo@baggins.net"
   profile_name: "bilbo_baggins"
+  encrypted_password: $2a$10$Fh/Hm8RxDsuPTeBUr6864.GARlcmt7zF2WspaXGr3BIv2C27N.osq
 
 gandalf:
   first_name: "gandalf"
@@ -14,4 +15,4 @@ samwise:
   first_name: "sam"
   last_name: "gamgee"
   email: "samwise@gamgee.com"
-  profile_name: "sam"
+  profile_name: "samwise"

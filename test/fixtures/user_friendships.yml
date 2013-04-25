@@ -1,3 +1,6 @@
 one:
   user: baggins
-  friend: sam
+  friend: gandalf
+two:
+  user: baggins
+  friend: samwise
