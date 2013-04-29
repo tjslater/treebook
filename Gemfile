@@ -1,25 +1,29 @@
 source 'https://rubygems.org'
 
-gem 'rails', '3.2.13'
+gem 'rails', '3.2.6'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
-gem 'sqlite3', :group => [:development, :test]
-group :production do
-#  gem 'thin'
-gem 'pg'
-end
 gem 'devise'
 gem 'simple_form'
 gem 'state_machine'
-#gem 'eventmachine'
-
+gem 'draper'
+gem 'js-routes'
 
 group :test do
-	gem 'shoulda'
-	gem 'factory_girl_rails'
+  gem 'shoulda'
+  gem 'factory_girl_rails'
 end
+
+group :development, :test do
+	gem 'sqlite3'
+end
+
+group :production do
+	gem "pg"
+end
+
 # Gems used only for assets and not required
 # in production environments by default.
 group :assets do

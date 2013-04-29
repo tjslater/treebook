@@ -6,7 +6,6 @@ class UserFriendshipsControllerTest < ActionController::TestCase
       should "redirect to the login page" do
         get :index
         assert_response :redirect
-        #assert_redirected_to login_path
       end
     end
 
@@ -14,11 +13,13 @@ class UserFriendshipsControllerTest < ActionController::TestCase
       setup do
         @friendship1 = create(:pending_user_friendship, user: users(:baggins), friend: create(:user, first_name: 'Pending', last_name: 'Friend'))
         @friendship2 = create(:accepted_user_friendship, user: users(:baggins), friend: create(:user, first_name: 'Active', last_name: 'Friend'))
+        @friendship3 = create(:requested_user_friendship, user: users(:baggins), friend: create(:user, first_name: 'Requested', last_name: 'Friend'))
+        @friendship4 = user_friendships(:blocked_by_baggins)
 
         sign_in users(:baggins)
         get :index
-
       end
+
       should "get the index page without error" do
         assert_response :success
       end
@@ -43,27 +44,108 @@ class UserFriendshipsControllerTest < ActionController::TestCase
           assert_select "em", "Friendship started #{@friendship2.updated_at}."
         end
       end
+
+      context "blocked users" do
+        setup do
+          get :index, list: 'blocked'
+        end
+
+        should "get the index without error" do
+          assert_response :success
+        end
+
+        should "not display pending or active friend's names" do
+          assert_no_match /Pending\ Friend/, response.body
+          assert_no_match /Active\ Friend/, response.body
+        end
+
+        should "display blocked friend names" do
+          assert_match /Blocked\ Friend/, response.body
+        end
+      end
+
+      context "pending friendships" do
+        setup do
+          get :index, list: 'pending'
+        end
+
+        should "get the index without error" do
+          assert_response :success
+        end
+
+        should "not display pending or active friend's names" do
+          assert_no_match /Blocked/, response.body
+          assert_no_match /Active/, response.body
+        end
+
+        should "display blocked friends" do
+          assert_match /Pending/, response.body
+        end
+      end
+
+      context "requested friendships" do
+        setup do
+          get :index, list: 'requested'
+        end
+
+        should "get the index without error" do
+          assert_response :success
+        end
+
+        should "not display pending or active friend's names" do
+          assert_no_match /Blocked/, response.body
+          assert_no_match /Active/, response.body
+        end
+
+        should "display requested friends" do
+          assert_match /Requested/, response.body
+        end
+      end
+
+      context "accepted friendships" do
+        setup do
+          get :index, list: 'accepted'
+        end
+
+        should "get the index without error" do
+          assert_response :success
+        end
+
+        should "not display pending or active friend's names" do
+          assert_no_match /Blocked/, response.body
+          assert_no_match /Requested/, response.body
+        end
+
+        should "display requested friends" do
+          assert_match /Active/, response.body
+        end
+      end
+
+
     end
-  
+  end  
+
+  context "#new" do
+    context "when not logged in" do
+      should "redirect to the login page" do
+        get :new
+        assert_response :redirect
+      end
+    end
 
     context "when logged in" do
       setup do
         sign_in users(:baggins)
       end
 
-      should "get new without error" do
+      should "get new and return success" do
         get :new
         assert_response :success
       end
 
-      should "should set a flash error if the friend_id param is missing" do
+      should "should set a flash error if the friend_id params is missing" do
         get :new, {}
         assert_equal "Friend required", flash[:error]
-      end
-
-      should "display a 404 page if no friend is found" do
-        get :new, friend_id: 'invalid'
-        assert_response :not_found
       end
 
       should "display the friend's name" do
@@ -76,25 +158,29 @@ class UserFriendshipsControllerTest < ActionController::TestCase
         assert assigns(:user_friendship)
       end
 
-      should "assign a user friendship with the correct friend" do
+      should "assign a new user friendship to the correct friend" do
         get :new, friend_id: users(:gandalf)
-        assert_equal users(:gandalf), assigns(:user_friendship).friend 
+        assert_equal users(:gandalf), assigns(:user_friendship).friend
       end
 
-      should "assign a user friendship with the user as current user" do
+      should "assign a new user friendship to the currently logged in user" do
         get :new, friend_id: users(:gandalf)
         assert_equal users(:baggins), assigns(:user_friendship).user
       end
 
+      should "returns a 404 status if no friend is found" do
+        get :new, friend_id: 'invalid'
+        assert_response :not_found
+      end
+
       should "ask if you really want to friend the user" do
-      	get :new, friend_id: users(:gandalf)
-      	assert_match /Do you really want to friend #{users(:gandalf).full_name}?/, response.body
+        get :new, friend_id: users(:gandalf)
+        assert_match /Do you really want to friend #{users(:gandalf).full_name}?/, response.body
       end
     end
   end
 
-  
-  context "#new" do
+  context "#create" do
     context "when not logged in" do
       should "redirect to the login page" do
         get :new
@@ -117,7 +203,7 @@ class UserFriendshipsControllerTest < ActionController::TestCase
           assert !flash[:error].empty?
         end
 
-        should "set redirect to root" do
+        should "redirect to the site root" do
           assert_redirected_to root_path
         end
       end
@@ -132,10 +218,11 @@ class UserFriendshipsControllerTest < ActionController::TestCase
 
       context "with a valid friend_id" do
         setup do
-          post :create, user_friendship: {friend_id: users(:samwise)}
+          post :create, user_friendship: { friend_id: users(:samwise).profile_name }
         end
 
         should "assign a friend object" do
+          assert assigns(:friend)
           assert_equal users(:samwise), assigns(:friend)
         end
 
@@ -145,7 +232,7 @@ class UserFriendshipsControllerTest < ActionController::TestCase
           assert_equal users(:samwise), assigns(:user_friendship).friend
         end
 
-        should "create a user friendship" do
+        should "create a friendship" do
           assert users(:baggins).pending_friends.include?(users(:samwise))
         end
 
@@ -208,12 +295,13 @@ class UserFriendshipsControllerTest < ActionController::TestCase
       setup do
         @user_friendship = create(:pending_user_friendship, user: users(:baggins))
         sign_in users(:baggins)
-        get :edit, id: @user_friendship
+        get :edit, id: @user_friendship.friend.profile_name
       end
 
-      should "get new and return success" do
+      should "get edit and return success" do
         assert_response :success
       end
+
       should "assign to user_friendship" do
         assert assigns(:user_friendship)
       end
@@ -236,23 +324,52 @@ class UserFriendshipsControllerTest < ActionController::TestCase
     context "when logged in" do
       setup do
         @friend = create(:user)
-        #UserFriendship.reqest users(:baggins), @friend
         @user_friendship = create(:accepted_user_friendship, friend: @friend, user: users(:baggins))
         create(:accepted_user_friendship, friend: users(:baggins), user: @friend)
+
         sign_in users(:baggins)
       end
 
-    should "delete user friendships" do
-      assert_difference 'UserFriendship.count', -2 do
+      should "delete user friendships" do
+        assert_difference 'UserFriendship.count', -2 do
+          delete :destroy, id: @user_friendship
+        end
+      end
+
+      should "set the flash" do
         delete :destroy, id: @user_friendship
+        assert_equal "Friendship destroyed", flash[:success]
+      end
+    end
+  end
+
+  context "#block" do
+    context "when not logged in" do
+      should 'redirect to the login page' do
+        put :block, id: 1
+        assert_response :redirect
+        assert_redirected_to login_path
       end
     end
 
-    should "set the flash" do
-      delete :destroy, id: @user_friendship
-      assert_equal "Friendship destroyed.", flash[:success]
+    context "when logged in" do
+      setup do
+        @user_friendship = create(:pending_user_friendship, user: users(:baggins))
+        sign_in users(:baggins)
+        put :block, id: @user_friendship
+        @user_friendship.reload
+      end
+
+      should "assign a user friendship" do
+        assert assigns(:user_friendship)
+        assert_equal @user_friendship, assigns(:user_friendship)
+      end
+
+      should "update the user friendship state to blocked" do
+        assert_equal 'blocked', @user_friendship.state
+      end
     end
   end
-end
+
 
 end

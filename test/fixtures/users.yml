@@ -16,3 +16,9 @@ samwise:
   last_name: "gamgee"
   email: "samwise@gamgee.com"
   profile_name: "samwise"
+
+blocked_friend:
+  first_name: 'Blocked'
+  last_name: 'Friend'
+  email: 'blocked@blocked.com'
+  profile_name: 'youblockedme'

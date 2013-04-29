@@ -1,6 +1,12 @@
 one:
   user: baggins
   friend: gandalf
+  
 two:
   user: baggins
   friend: samwise
+
+blocked_by_baggins:
+  user: baggins
+  friend: blocked_friend
+  state: 'blocked'
